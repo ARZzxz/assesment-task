@@ -7,18 +7,21 @@ from datetime import datetime
 import models
 from database import engine, SessionLocal
 
+# Create database tables
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # In production, restrict this to your frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Dependency to get the database session
 def get_db():
     db = SessionLocal()
     try:
@@ -26,6 +29,7 @@ def get_db():
     finally:
         db.close()
 
+# Pydantic models for request/response
 class TaskBase(BaseModel):
     title: str
     completed: bool = False
@@ -45,6 +49,7 @@ class TaskResponse(TaskBase):
     class Config:
         orm_mode = True
 
+# Routes
 @app.get("/api/tasks", response_model=List[TaskResponse])
 def get_tasks(db: Session = Depends(get_db)):
     return db.query(models.Task).all()
@@ -90,7 +95,4 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Task deleted successfully"}
 
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-import os
+# ARZzz (Achmad Rizky)
